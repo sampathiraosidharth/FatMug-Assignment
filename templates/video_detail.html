@@ -1,0 +1,106 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{ video.video_name }}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .focused {
+            background-color: #f0f0f0;
+            border: 2px solid #000;
+        }
+
+        h1,
+        h3 {
+            color: green;
+            text-align: center;
+        }
+
+        .videobox {
+            display: flex;
+            justify-content: center;
+        }
+
+        .subtitle-box {
+            text-align: center;
+            font-size: 1.5em;
+            padding: 20px;
+        }
+
+        /* Hide the subtitle list */
+        .subtitle-list {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>{{ video.video_name }}</h1>
+    <div class="videobox">
+        <video id="myVideo" controls width="800">
+            {% with start=timestamp|floatformat %}
+                <source src="{% url 'stream_video' video.id %}#t={{ start }}" type="video/mp4">
+            {% endwith %}
+            <track label="English" kind="subtitles" srclang="en" src="{{ vtt_file_path }}" default>
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <h2>Current Subtitle</h2>
+    <div id="current-subtitle" class="subtitle-box">
+        No subtitles available.
+    </div>
+
+    <ul id="subtitle-list" class="subtitle-list">
+        {% for subtitle in subtitles %}
+            <li id="subtitle-{{ forloop.counter }}" class="subtitle-item{% if query in subtitle.content %} focused{% endif %}"
+                data-start-time="{{ subtitle.start_time }}">
+                {{ subtitle.start_time }} - {{ subtitle.content }}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const video = document.getElementById('myVideo');
+            const currentSubtitleBox = document.getElementById('current-subtitle');
+            const urlParams = new URLSearchParams(window.location.search);
+            const timestamp = parseFloat(urlParams.get('timestamp')) || 0;
+            const query = urlParams.get('query') || '';
+
+            console.log("Start Time from URL:", timestamp);
+            console.log("Query from URL:", query);
+
+            video.textTracks[0].mode = 'showing'; // Assuming the first track is the subtitle track
+
+            video.addEventListener('loadedmetadata', function () {
+                video.currentTime = timestamp;
+                video.play();
+            });
+
+            function updateCurrentSubtitle() {
+                const currentTime = video.currentTime;
+                let activeSubtitle = "No subtitles available.";
+
+                document.querySelectorAll('.subtitle-item').forEach(item => {
+                    const startTime = parseFloat(item.dataset.startTime);
+                    if (startTime <= currentTime) {
+                        activeSubtitle = item.innerText;
+                    }
+                });
+
+                currentSubtitleBox.textContent = activeSubtitle;
+            }
+
+            // Update the subtitle when video time updates
+            video.addEventListener('timeupdate', updateCurrentSubtitle);
+
+            // Initial update of current subtitle
+            updateCurrentSubtitle();
+        });
+    </script>
+</body>
+
+</html>

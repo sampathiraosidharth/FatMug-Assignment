@@ -1,0 +1,34 @@
+<!-- templates/videos/search_results.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Subtitles</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <h1>Search Subtitles</h1>
+    <form method="GET" action="{% url 'search_subtitles' %}">
+        <input type="text" name="q" placeholder="Search by subtitle content..." value="{{ query }}">
+        <button type="submit">Search</button>
+    </form>
+
+    {% if results %}
+        <h2>Results for "{{ query }}":</h2>
+        <ul>
+        {% for subtitle in results %}
+            <li>
+                <a href="{% url 'video_detail' subtitle.video.id %}?timestamp={{ subtitle.start_time }}">
+                    {{ subtitle.video.video_name }} - "{{ subtitle.content|slice:":100" }}" at {{ subtitle.start_time }}s
+                </a>
+<!--                <h1>"{% url 'video_detail' subtitle.video.id %}?timestamp={{ subtitle.start_time }}&query={{query}}"</h1>-->
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No subtitles found.</p>
+    {% endif %}
+</body>
+</html>

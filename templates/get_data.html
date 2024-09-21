@@ -1,0 +1,80 @@
+<!-- templates/videos/get_data.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Video Data</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <h1>Retrieve Video Data</h1>
+    <form id="getDataForm" method="POST">
+        <label for="table">Select Table:</label>
+        <select id="table" name="table" required>
+            <option value="1">VideoModel1</option>
+            <option value="2">VideoModel2</option>
+        </select><br><br>
+        <button type="submit">Get Data</button>
+    </form>
+
+    <h2>Video Data</h2>
+    <div id="dataResponse">
+        <!-- The video data will be displayed here -->
+    </div>
+
+    <script>
+        document.getElementById('getDataForm').addEventListener('submit', async function(e) {
+            e.preventDefault();  // Prevent default form submission
+            let formData = new FormData(this);
+            let responseDiv = document.getElementById('dataResponse');
+            responseDiv.innerHTML = '';  // Clear previous data
+
+            try {
+                const response = await fetch("{% url 'Checkdata' %}", {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const result = await response.json();
+                console.log('Response:', result);
+
+                if (result.data) {
+                    const videoData = JSON.parse(result.data);  // Parse JSON data
+                    displayData(videoData);
+                } else {
+                    responseDiv.innerHTML = 'No data found';
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                responseDiv.innerHTML = 'Error fetching data';
+            }
+        });
+
+        function displayData(videoData) {
+            let responseDiv = document.getElementById('dataResponse');
+            let table = '<table border="1"><tr><th>ID</th><th>Video Name</th><th>Video File</th></tr>';
+
+            videoData.forEach(video => {
+                table += `
+                    <tr>
+                        <td>${video.pk}</td>
+                        <td>${video.fields.video_name}</td>
+                        <td><a href="/media/${video.fields.video_file}" target="_blank">View Video</a></td>
+                    </tr>
+                `;
+            });
+            table += '</table>';
+            responseDiv.innerHTML = table;
+        }
+    </script>
+</body>
+</html>

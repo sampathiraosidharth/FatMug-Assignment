@@ -1,0 +1,46 @@
+<!-- templates/videos/upload_video1.html -->
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Video (VideoApi)</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <h1>Upload Video to VideoApi</h1>
+    <form id="uploadForm1" method="POST" enctype="multipart/form-data">
+        <label for="name1">Video Name:</label>
+        <input type="text" id="name1" name="Name" required><br><br>
+
+        <label for="video1">Select Video File:</label>
+        <input type="file" id="video1" name="Video" accept="video/*" required><br><br>
+
+        <button type="submit">Upload Video</button>
+    </form>
+
+    <div id="response1"></div>
+
+    <script>
+        document.getElementById('uploadForm1').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            let formData = new FormData(this);
+            let responseDiv = document.getElementById('response1');
+
+            const response = await fetch("{% url 'Video Extractor ORM Based' %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+            });
+
+            const result = await response.json();
+            responseDiv.innerHTML = result.Message;
+        });
+    </script>
+
+    <p><a href="{% url 'Checkdata' %}">Get All Video Data (VideoApi)</a></p>
+</body>
+</html>
